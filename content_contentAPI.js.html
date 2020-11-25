@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>content/contentAPI.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CollectionSchema">CollectionSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CommentSchema">CommentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ContentSchema">ContentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createCollection">createCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createComment">createComment</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createContent">createContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFileFromBuffer">createFileFromBuffer</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFilesForCollection">createFilesForCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createUser">createUser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#downloadFile">downloadFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#filterContent">filterContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCollections">getCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCommentContents">getCommentContents</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getContentText">getContentText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getNewestContent">getNewestContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserCollections">getUserCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserContent">getUserContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUsername">getUsername</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#handleError">handleError</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#loginRequest">loginRequest</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#nukeFile">nukeFile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#rawBodyParser">rawBodyParser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#sendStaticFileURL">sendStaticFileURL</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#TagSchema">TagSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#UserSchema">UserSchema</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">content/contentAPI.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//https://expressjs.com/en/guide/routing.html
+const express = require("express");
+const router = express.Router();
+const bodyParser = require("body-parser");
+const createContent = require("./createContentController");
+const {
+  getContentText,
+  createFileFromBuffer,
+  sendStaticFileURL,
+  downloadFile,
+  nukeFile,
+} = require("./viewContentController");
+
+//https://github.com/expressjs/multer/issues/523
+/**
+ * for transfering bodies as a buffer (binary data) limits the transfer to 5MB (currently allows all types)
+ */
+const rawBodyParser = bodyParser.raw({ limit: "5000kb", type: "*/*" });
+
+/**
+ * Endpoint for creating copntent, uses  `createContentController.js` to call `createContent` function
+ */
+router.post("/content", rawBodyParser, createContent.createContent);
+
+/**
+ * Endpoint for getting a content text, uses  `viewContentController.js` to call `getContentText` function
+ */
+router.get("/content/text", getContentText);
+
+/**
+ * Endpoint for creating a file from a buffer stored in the DB, uses  `viewContentController.js` to call `createFileFromBuffer` function
+ */
+router.get("/content/file", createFileFromBuffer);
+
+/**
+ * Endpoint which sends the static file URL for a content, uses  `viewContentController.js` to call `sendStaticFileURL` function
+ */
+router.get("/content/file/url", sendStaticFileURL);
+
+/**
+ * Endpoint for downloading content, uses  `viewContentController.js` to call `downloadFile` function
+ */
+router.get("/content/file/:id", downloadFile);
+
+/**
+ * Endpoint for destroying/nuking a created file, uses  `viewContentController.js` to call `nukeFile` function
+ */
+router.delete("/content/file/:id", nukeFile);
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Nov 25 2020 14:00:06 GMT+0100 (Central European Standard Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

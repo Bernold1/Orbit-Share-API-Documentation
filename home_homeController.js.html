@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>home/homeController.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CollectionSchema">CollectionSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CommentSchema">CommentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ContentSchema">ContentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createCollection">createCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createComment">createComment</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createContent">createContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFileFromBuffer">createFileFromBuffer</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFilesForCollection">createFilesForCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createUser">createUser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#downloadFile">downloadFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#filterContent">filterContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCollections">getCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCommentContents">getCommentContents</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getContentText">getContentText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getNewestContent">getNewestContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserCollections">getUserCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserContent">getUserContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUsername">getUsername</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#handleError">handleError</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#loginRequest">loginRequest</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#nukeFile">nukeFile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#rawBodyParser">rawBodyParser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#sendStaticFileURL">sendStaticFileURL</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#TagSchema">TagSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#UserSchema">UserSchema</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">home/homeController.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//Middleware
+const mongoose = require("mongoose");
+
+// Models/Schemas
+const ContentSchema = require("../content/content");
+const Collection = require("../collection/collection");
+
+//Controllers
+const errorLogging = require("../errorHandling/errorLogging");
+
+/**
+ * Finds all content
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If error occurs when trying to find document/document is not found
+ */
+const getNewestContent = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  try {
+    const tenNewest = await Content.find({}, { contentData: 0 }).sort({
+      created_at: -1,
+    });
+    // .limit(10);
+
+    res.status(200).json({ tenNewest });
+  } catch (error) {
+    errorLogging.handleError(error);
+    res.status(404);
+  }
+};
+
+//https://stackoverflow.com/questions/28495622/exclude-field-in-array-of-subdocument-in-mongodb
+/**
+ * Finds all collections
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If error occurs when trying to find document/document is not found
+ */
+const getCollections = async (req, res) => {
+  try {
+    const allCollections = await Collection.find(
+      {},
+      { "content.contentData": 0 }
+    );
+
+    res.status(200).json({ allCollections });
+  } catch (error) {
+    errorLogging.handleError(error);
+    res.status(404);
+  }
+};
+
+module.exports.getNewestContent = getNewestContent;
+module.exports.getCollections = getCollections;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Nov 25 2020 14:00:06 GMT+0100 (Central European Standard Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

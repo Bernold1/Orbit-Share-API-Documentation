@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>collection/createCollectionController.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CollectionSchema">CollectionSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CommentSchema">CommentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ContentSchema">ContentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createCollection">createCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createComment">createComment</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createContent">createContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFileFromBuffer">createFileFromBuffer</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFilesForCollection">createFilesForCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createUser">createUser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#downloadFile">downloadFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#filterContent">filterContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCollections">getCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCommentContents">getCommentContents</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getContentText">getContentText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getNewestContent">getNewestContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserCollections">getUserCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserContent">getUserContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUsername">getUsername</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#handleError">handleError</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#loginRequest">loginRequest</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#nukeFile">nukeFile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#rawBodyParser">rawBodyParser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#sendStaticFileURL">sendStaticFileURL</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#TagSchema">TagSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#UserSchema">UserSchema</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">collection/createCollectionController.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//Middleware
+const multer = require("multer");
+const mongoose = require("mongoose");
+const path = require("path");
+const fs = require("fs");
+//Models
+const Collection = require("./collection");
+const ContentSchema = require("../content/content");
+
+//Controllers
+const errorLogging = require("../errorHandling/errorLogging");
+
+// createFilesForCollection description:
+
+/**
+ * Files from client are passed, where multer middleware takes the files and stores them into
+ * the uploads folder found in the root (folder is specified in the API file), responds with a
+ * JSON array, containing fieldname, original file name, encoding, mimetype, filename, destination,
+ * path and size.
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @param   {Object}    next           Next: used when invoked to execute the succeeding middleware.
+ * @return  {res.status() | NaN}
+ * @throws {res.status(400)} When a file is empty or not passed to the function
+ */
+const createFilesForCollection = (req, res, next) => {
+  const files = req.files;
+
+  if (!files) {
+    const error = new Error("Please upload a file");
+    error.httpStatusCode = 400;
+    return next(error);
+  }
+
+  res.status(200).send(files);
+};
+
+/**
+ * Request body contains all text information, an array of object literals containing
+ * the structure of the content schema is created by using a map on the request body content array.
+ * Here the previous request where `createFilesForCollection` is called, the file name is stored into the
+ * content array in the client where the map than uses the file name to locate the file and create a buffer
+ * inside of the object literal. A new collection object is than created containing the array of object literals.
+ * The mongoose middleware than persists the collection document.
+ * *Temp files are destroyed upon successful persistance*
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} When a file is not found
+ * @throws {res.status(400)} If error occurs when saving the collection
+ */
+const createCollection = async (req, res) => {
+  const contentArr = req.body.content.map((tempContent) => ({
+    title: tempContent.title,
+    contentData: {
+      fileData: Buffer.from(path.join("uploads/", tempContent.filename)),
+    },
+    author: req.body.userId,
+    access: tempContent.access,
+    tags: tempContent.tags,
+    description: tempContent.description,
+  }));
+
+  let collectionItem = new Collection({
+    title: req.body.collectionTitle,
+    userId: req.body.userId,
+    content: contentArr,
+  });
+
+  const filePaths = req.body.content.map((tempContent) => ({
+    file: path.join("uploads/", tempContent.filename),
+  }));
+
+  try {
+    await collectionItem.save();
+    //destroy temp file
+    filePaths.forEach((element) => {
+      fs.unlink(element.file, (err) => {
+        if (err) {
+          res.status(404);
+        }
+        //showing a 201 for a create collection
+        res.status(201).end();
+      });
+    });
+  } catch (error) {
+    errorLogging.handleError(error);
+    res.status(400).end();
+  }
+};
+
+module.exports.createFilesForCollection = createFilesForCollection;
+module.exports.createCollection = createCollection;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Nov 25 2020 14:00:06 GMT+0100 (Central European Standard Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

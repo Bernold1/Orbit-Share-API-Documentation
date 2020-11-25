@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>content/viewContentController.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CollectionSchema">CollectionSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#CommentSchema">CommentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ContentSchema">ContentSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createCollection">createCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createComment">createComment</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createContent">createContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFileFromBuffer">createFileFromBuffer</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createFilesForCollection">createFilesForCollection</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#createUser">createUser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#downloadFile">downloadFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#filterContent">filterContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCollections">getCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getCommentContents">getCommentContents</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getContentText">getContentText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getNewestContent">getNewestContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserCollections">getUserCollections</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUserContent">getUserContent</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getUsername">getUsername</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#handleError">handleError</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#loginRequest">loginRequest</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#nukeFile">nukeFile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#rawBodyParser">rawBodyParser</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#sendStaticFileURL">sendStaticFileURL</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#TagSchema">TagSchema</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#UserSchema">UserSchema</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">content/viewContentController.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//middleware and node modules
+const mongoose = require("mongoose");
+const fs = require("fs");
+const FileType = require("file-type");
+const path = require("path");
+const { json } = require("body-parser");
+
+//Models
+const ContentSchema = require("./content");
+const Collection = require("../collection/collection");
+
+//Controllers
+const errorLogging = require("../errorHandling/errorLogging");
+const { collection } = require("../collection/collection");
+
+//collection query inspired by:
+//https://stackoverflow.com/questions/3985214/retrieve-only-the-queried-element-in-an-object-array-in-mongodb-collection
+//https://stackoverflow.com/questions/34184197/returning-only-sub-document-based-on-subdocument-id-which-is-the-items-of-array
+//https://mongoosejs.com/docs/queries.html#versus-aggregation
+//https://mongoosejs.com/docs/api/aggregate.html#aggregate_Aggregate
+
+/**
+ * gets the content text based on the contentID based in the request query.
+ *  Uses a standard findById query if the content is a single content.
+ * If the content clicked on is a collection, the find query is done on the content subdocuments in the collections.
+ * Here the query looks for a content which has the passed contentId, if a content is found, returns a content object
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If no content is found.
+ */
+const getContentText = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
+
+  const DataFromDB = await Content.findById(contentId, {
+    contentData: 0,
+  }).catch((error) => {
+    errorLogging.handleError(error);
+    res.status(404).end();
+  });
+
+  if (DataFromDB !== null) {
+    res.status(200).json(DataFromDB);
+  } else {
+    const checkForCollection = await Collection.findOne(
+      { "content._id": contentId },
+      { content: { $elemMatch: { _id: contentId } }, _id: 0 }
+    ).catch((error) => {
+      errorLogging.handleError(error);
+      res.status(400).end();
+    });
+
+    res.status(200).json(checkForCollection.content[0]);
+  }
+};
+
+/**
+ * Finds a file buffer based on the content objectId passed in the request query,
+ * creates a file based on the buffer using `utf8` encoding and stores the file into a folder
+ *  where all static files are stored.
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If no content is found.
+ * @throws {res.status(500)} If an error occurs when trying to convert the buffer to a file.
+ */
+const createFileFromBuffer = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
+  const fileFromDB = await Content.findById(contentId, {
+    title: 0,
+    author: 0,
+    tags: 0,
+    description: 0,
+  }).catch((error) => {
+    errorLogging.handleError(error);
+    res.status(404).end();
+  });
+
+  (async () => {
+    try {
+      const fileData = fileFromDB.contentData;
+      const bufferHolder = fileData.fileData;
+      const bufferArr = bufferHolder.buffer;
+      const staticFilePath = path.join(__dirname, "../../public/files/");
+
+      const fileExtention = await FileType.fromBuffer(Buffer.from(bufferArr));
+      const data = new Uint8Array(Buffer.from(bufferArr));
+      fs.writeFile(
+        `${staticFilePath}/OrbitShareFile-${contentId}.${fileExtention.ext}`,
+        data,
+        "utf8",
+        (err) => {
+          if (err) throw err;
+          res.status(200);
+          console.log("File saved ");
+        }
+      );
+    } catch (error) {
+      errorLogging.handleError(error);
+      res.status(500).send("error in file operation");
+    }
+  })();
+};
+
+/**
+ * responds with the static file location of the content requested.
+ * Makes a call to the DB to find the buffer and get the file extension.
+ * Is only called after `createFileFromBuffer` has created a file.
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If no content is found.
+ * @throws {res.status(500)} If an error occurs when trying to respond with the file URL
+ */
+const sendStaticFileURL = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
+
+  const fileFromDB = await Content.findById(contentId, {
+    title: 0,
+    author: 0,
+    tags: 0,
+    description: 0,
+  }).catch((error) => {
+    errorLogging.handleError(error);
+    res.status(404).end();
+  });
+
+  (async () => {
+    try {
+      const fileData = fileFromDB.contentData;
+      const bufferHolder = fileData.fileData;
+      const bufferArr = bufferHolder.buffer;
+
+      const fileExtention = await FileType.fromBuffer(Buffer.from(bufferArr));
+      const fileURL = JSON.stringify(
+        encodeURIComponent(
+          `${process.env.SERVER_STATIC_FILES}/OrbitShareFile-${contentId}.${fileExtention.ext}`
+        )
+      );
+      res.status(200).json(fileURL);
+      console.log("File URL sent");
+    } catch (error) {
+      errorLogging.handleError(error);
+      res.status(500).send("error sending file url");
+    }
+  })();
+};
+
+/**
+ * Locates a content in the database and if the content exists, a buffer is returned.
+ * This buffer is than converted to a file and the triggers a download in the browser.
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {Promise}
+ * @async
+ * @throws {res.status(404)} If no content is found.
+ * @throws {res.status(500)} If an error occurs when trying to convert the buffer to a file.
+ */
+const downloadFile = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
+  const fileFromDB = await Content.findById(contentId, {
+    title: 0,
+    author: 0,
+    tags: 0,
+    description: 0,
+  }).catch((error) => {
+    errorLogging.handleError(error);
+    res.status(404).end();
+  });
+
+  const fileData = fileFromDB.contentData;
+  const bufferHolder = fileData.fileData;
+  const bufferArr = bufferHolder.buffer;
+  const staticFilePath = path.join(__dirname, "../../public/files/");
+
+  (async () => {
+    try {
+      const fileExtention = await FileType.fromBuffer(Buffer.from(bufferArr));
+      const data = new Uint8Array(Buffer.from(bufferArr));
+      fs.writeFile(
+        `${staticFilePath}/OrbitShareFile-${contentId}.${fileExtention.ext}`,
+        data,
+        "utf8",
+        (err) => {
+          if (err) throw err;
+          const file = `${staticFilePath}/OrbitShareFile-${contentId}.${fileExtention.ext}`;
+          res.status(200).download(file);
+          console.log("File saved ");
+        }
+      );
+    } catch (error) {
+      errorLogging.handleError(error);
+      res.status(500).send("error in file operation");
+    }
+  })();
+};
+
+/**
+ * Destroys the requested file when called.
+ * @param   {Object}    req            HTTP Request
+ * @param   {Object}    res            HTTP Response
+ * @return  {NaN}
+ * @async
+ * @throws {res.status(404)} If no file is found.
+ */
+const nukeFile = (req, res) => {
+  const fileLocation = JSON.parse(decodeURIComponent(req.query.fileLocation));
+  const staticFilePath = path.join(__dirname, "../../public/files/");
+
+  const fileToDelete = fileLocation
+    .split("http://localhost:3000/files/")
+    .join("");
+  console.log("file to delete: ", fileToDelete);
+
+  fs.unlink(staticFilePath + fileToDelete, (err) => {
+    if (err) {
+      res.status(404);
+    }
+    res.status(204);
+  });
+};
+
+module.exports.getContentText = getContentText;
+module.exports.createFileFromBuffer = createFileFromBuffer;
+module.exports.sendStaticFileURL = sendStaticFileURL;
+module.exports.downloadFile = downloadFile;
+module.exports.nukeFile = nukeFile;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Nov 25 2020 14:00:06 GMT+0100 (Central European Standard Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
