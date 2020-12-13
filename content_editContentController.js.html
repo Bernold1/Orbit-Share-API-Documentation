@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>comment/viewCommentController.js - Documentation</title>
+    <title>content/editContentController.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">comment/viewCommentController.js</h1>
+    <h1 class="page-title">content/editContentController.js</h1>
     
 
     
@@ -39,38 +39,35 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>const Comment = require("./comment");
-//const Content = require("../content/content");
+            <pre class="prettyprint source linenums"><code>//middleware and node modules
+const mongoose = require("mongoose");
+
+//Models
+const ContentSchema = require("./content");
+
+//Controllers
 const errorLogging = require("../errorHandling/errorLogging");
 
 /**
- * Gets the contentid via the request parameters, and completes a find query to return all comments which
- * are part of the specified content. Limits the search to only return 30 comments (_needs tweaking_)
+ * gets the contentId from the HTTP params, and deletes the content if the document is found
  * @param   {Object}    req            HTTP Request
  * @param   {Object}    res            HTTP Response
  * @return  {Promise}
  * @async
- * @throws {res.status(400)} If error occurs when trying to find the comment
+ * @throws {res.status(404)} If error occurs when trying to delete the document.
  */
-const getCommentContents = async (req, res) => {
-  console.log("id is", req.params.id);
+const deleteContent = async (req, res) => {
+  const Content = mongoose.model("Content", ContentSchema);
+  const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
   try {
-    const id = req.params.id;
-    const commentContents = await Comment.find({ content: id }, { user: 0 })
-      .sort({ created_at: -1 })
-      .limit(30);
-
-    res.status(200).json(commentContents);
+    await Content.deleteOne({ _id: contentId });
+    res.status(204).end();
   } catch (error) {
-    errorLogging.handleError(error);
-    res.status(400);
+    res.status(404);
   }
 };
 
-module.exports.getCommentContents = getCommentContents;
-
-// possibly need a function that parses contentId to Angular
-//const contentId = JSON.parse(decodeURIComponent(req.query.contentId));
+module.exports.deleteContent = deleteContent;
 </code></pre>
         </article>
     </section>
